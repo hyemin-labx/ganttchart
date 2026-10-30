@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>프로젝트 타임라인</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --border: #e7e8ec;
+    --divider: #f0f1f4;
+    --text: #1d2129;
+    --text-2: #5c6370;
+    --muted: #9aa1ad;
+    --band: #f7f8fa;
+    --hover: #f4f6fb;
+    --today: #e5484d;
+    --c-proj: #6f80a8;
+    --c-comp: #e2861a;
+    --c-contest: #3e63dd;
+    --c-etc: #6f80a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191919;
+      --surface: #1e1f22;
+      --border: #2e3036;
+      --divider: #272a2f;
+      --text: #ececee;
+      --text-2: #a8adb7;
+      --muted: #6f7580;
+      --band: #232529;
+      --hover: #262a33;
+      --today: #ff6369;
+      --c-proj: #8a9bc4;
+      --c-comp: #f0a040;
+      --c-contest: #6b8cff;
+      --c-etc: #8a9bc4;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+      "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: 13px; letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .card {
+    margin: 2px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+  }
+
+  /* 상단 헤더 */
+  .top {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; padding: 18px 20px 14px;
+  }
+  .top h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .top .sub { margin-top: 4px; color: var(--text-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 14px; color: var(--text-2); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  /* 본문 그리드 */
+  .table { display: grid; grid-template-columns: var(--labelw) 1fr; border-top: 1px solid var(--border); }
+  .cell-l { border-right: 1px solid var(--border); padding: 0 14px 0 20px; min-width: 0; }
+  .cell-r { position: relative; min-width: 0; }
+
+  .thead .cell-l, .thead .cell-r { height: 52px; border-bottom: 1px solid var(--border); }
+  .thead .cell-l {
+    display: flex; align-items: flex-end; padding-bottom: 9px;
+    color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .yr, .mo { position: absolute; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .yr { top: 9px; padding-left: 8px; font-size: 12px; font-weight: 700; color: var(--text); }
+  .mo { bottom: 9px; text-align: center; font-size: 11px; color: var(--muted); }
+
+  .body { position: relative; }
+  .layer { position: absolute; top: 0; bottom: 0; left: var(--labelw); right: 0; pointer-events: none; }
+  .band { position: absolute; top: 0; bottom: 0; background: var(--band); }
+  .vline { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--divider); }
+  .vline.y { background: var(--border); }
+
+  .row { display: contents; color: inherit; text-decoration: none; }
+  .row > div { height: 48px; border-bottom: 1px solid var(--divider); transition: background .12s; }
+  .row:last-child > div { border-bottom: 0; }
+  .row:hover > div { background: var(--hover); }
+  .row .cell-l { display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+  .row .cell-r { z-index: 1; background: transparent; }
+  .row:hover .cell-r { background: color-mix(in srgb, var(--hover) 60%, transparent); }
+
+  .name { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; min-width: 0; }
+  .name .dot { flex: none; width: 7px; height: 7px; border-radius: 50%; }
+  .name .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .date { margin: 3px 0 0 14px; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge {
+    margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+    color: var(--c-proj); background: color-mix(in srgb, var(--c-proj) 12%, transparent);
+  }
+
+  .bar {
+    position: absolute; top: 50%; height: 16px; transform: translateY(-50%);
+    border-radius: 5px; min-width: 6px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+  }
+  .bar.ongoing { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .bar.cut-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+  .today { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px solid var(--today); pointer-events: none; z-index: 2; }
+  .today b {
+    position: absolute; top: -21px; transform: translateX(-50%);
+    background: var(--today); color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+  }
+
+  .foot { display: flex; justify-content: space-between; padding: 10px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+  .empty { padding: 28px 20px; color: var(--muted); }
+
+  @media (max-width: 560px) {
+    .top { padding: 14px 14px 12px; }
+    .cell-l { padding: 0 10px 0 14px; }
+    .date { display: none; }
+    .foot { padding: 10px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top">
+    <div>
+      <h1 id="title"></h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="table thead">
+    <div class="cell-l">프로젝트</div>
+    <div class="cell-r" id="axis"></div>
+  </div>
+
+  <div class="body" id="body">
+    <div class="layer" id="layer"></div>
+    <div class="table" id="rows"></div>
+  </div>
+
+  <div class="foot"><span id="count"></span><span id="updated"></span></div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+(function () {
+  const DAY = 86400000;
+  const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d || 1); };
+  const fmt = (t) => { const d = new Date(t); return `${d.getUTCFullYear()}.${String(d.getUTCMonth() + 1).padStart(2, "0")}`; };
+
+  const now = new Date();
+  const TODAY = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const [ry1, rm1] = DATA.rangeStart.split("-").map(Number);
+  const [ry2, rm2] = DATA.rangeEnd === "now"
+    ? [now.getFullYear(), now.getMonth() + 1]
+    : DATA.rangeEnd.split("-").map(Number);
+  const R0 = Date.UTC(ry1, rm1 - 1, 1);
+  const R1 = Date.UTC(ry2, rm2, 1);
+  const pct = (t) => ((t - R0) / (R1 - R0)) * 100;
+
+  // 분류 색상
+  const CATS = { "프로젝트": "var(--c-proj)", "경진대회": "var(--c-comp)", "공모전": "var(--c-contest)" };
+  const colorOf = (c) => CATS[c] || "var(--c-etc)";
+
+  // 항목
+  let items = DATA.items.map((it) => {
+    const s = parse(it.start);
+    const ongoing = !it.end;
+    const e = it.end ? parse(it.end) + DAY : Math.max(TODAY, s) + DAY;
+    return { ...it, s, e, ongoing, cat: it.category || "기타" };
+  });
+  if (DATA.hideOutside) items = items.filter((i) => i.e > R0 && i.s < R1);
+  items.sort((a, b) => DATA.sort === "start_asc" ? a.s - b.s : b.s - a.s);
+
+  // 헤더 텍스트
+  document.getElementById("title").textContent = DATA.title || "프로젝트 타임라인";
+  document.getElementById("sub").textContent = `${fmt(R0)} – ${fmt(R1 - DAY)}`;
+  const used = [...new Set(items.map((i) => i.cat))];
+  const order = ["프로젝트", "경진대회", "공모전"];
+  used.sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
+  document.getElementById("legend").innerHTML =
+    used.map((c) => `<span><i style="background:${colorOf(c)}"></i>${c}</span>`).join("");
+  document.getElementById("count").textContent = `프로젝트 ${items.length}건`;
+  if (DATA.updated) document.getElementById("updated").textContent = "동기화 " + DATA.updated;
+
+  // 행
+  const rows = document.getElementById("rows");
+  if (!items.length) rows.outerHTML = '<div class="empty">이 기간에 표시할 일정이 없어요.</div>';
+  items.forEach((it) => {
+    const row = document.createElement(it.url ? "a" : "div");
+    row.className = "row";
+    if (it.url) { row.href = it.url; row.target = "_blank"; row.rel = "noopener"; }
+    const color = colorOf(it.cat);
+
+    const l = document.createElement("div");
+    l.className = "cell-l";
+    l.innerHTML = `<div class="name"><span class="dot"></span><span class="t"></span></div><div class="date"></div>`;
+    l.querySelector(".dot").style.background = color;
+    l.querySelector(".t").textContent = (it.icon ? it.icon + " " : "") + it.title;
+    const dEl = l.querySelector(".date");
+    dEl.textContent = `${it.start.replaceAll("-", ".")} – ${it.end ? it.end.replaceAll("-", ".") : ""}`;
+    if (it.ongoing) {
+      const b = document.createElement("span"); b.className = "badge"; b.textContent = "진행 중"; dEl.appendChild(b);
+    }
+    row.title = it.title;
+
+    const r = document.createElement("div");
+    r.className = "cell-r";
+    const L = Math.max(0, pct(it.s)), Rr = Math.min(100, pct(it.e));
+    const bar = document.createElement("div");
+    bar.className = "bar" + (it.ongoing ? " ongoing" : "") + (it.s < R0 ? " cut-l" : "");
+    bar.style.left = L + "%";
+    bar.style.width = (Rr - L) + "%";
+    bar.style.background = it.ongoing
+      ? `linear-gradient(90deg, ${color} 0%, ${color} 75%, color-mix(in srgb, ${color} 25%, transparent) 100%)`
+      : color;
+    r.appendChild(bar);
+
+    row.append(l, r);
+    rows.appendChild(row);
+  });
+
+  // 축/격자 (폭에 따라 월 표시 간격 조절)
+  const axis = document.getElementById("axis");
+  const layer = document.getElementById("layer");
+  function drawAxis() {
+    const w = axis.clientWidth;
+    const months = (ry2 - ry1) * 12 + (rm2 - rm1) + 1;
+    const per = w / months;
+    const step = per >= 22 ? 1 : per >= 11 ? 3 : 6;
+    axis.innerHTML = ""; layer.innerHTML = "";
+
+    for (let yy = ry1; yy <= ry2; yy++) {
+      const a = Math.max(R0, Date.UTC(yy, 0, 1)), b = Math.min(R1, Date.UTC(yy + 1, 0, 1));
+      const yl = document.createElement("div");
+      yl.className = "yr"; yl.textContent = yy;
+      yl.style.left = pct(a) + "%";
+      axis.appendChild(yl);
+      if ((yy - ry1) % 2 === 1) {
+        const band = document.createElement("div");
+        band.className = "band";
+        band.style.left = pct(a) + "%"; band.style.width = (pct(b) - pct(a)) + "%";
+        layer.appendChild(band);
+      }
+    }
+    let y = ry1, m = rm1 - 1;
+    while (Date.UTC(y, m, 1) < R1) {
+      const a = Date.UTC(y, m, 1), b = Date.UTC(y, m + 1, 1);
+      if (m % step === 0) {
+        const ml = document.createElement("div");
+        ml.className = "mo"; ml.textContent = (m + 1) + "월";
+        if (per < 30) ml.textContent = m + 1;
+        ml.style.left = pct(a) + "%"; ml.style.width = (pct(b) - pct(a)) * (step === 1 ? 1 : 2) + "%";
+        if (step !== 1) { ml.style.textAlign = "left"; ml.style.paddingLeft = "3px"; }
+        axis.appendChild(ml);
+      }
+      if (m === 0 && a > R0) {
+        const v = document.createElement("div"); v.className = "vline y"; v.style.left = pct(a) + "%";
+        layer.appendChild(v);
+      }
+      m++; if (m === 12) { m = 0; y++; }
+    }
+    if (TODAY >= R0 && TODAY < R1) {
+      const t = document.createElement("div");
+      t.className = "today"; t.style.left = pct(TODAY + DAY / 2) + "%";
+      t.innerHTML = "<b>오늘</b>";
+      // 라벨이 오른쪽 끝에서 잘리지 않도록
+      if (pct(TODAY) > 96) t.querySelector("b").style.transform = "translateX(-100%)";
+      layer.appendChild(t);
+      const tt = t.cloneNode(true); tt.querySelector("b").remove();
+      axis.appendChild(Object.assign(tt, {}));
+    }
+  }
+
+  // 라벨 열 폭: 화면 폭의 32% (180~300px)
+  function layout() {
+    const w = document.body.clientWidth;
+    const lw = Math.max(w < 560 ? 130 : 180, Math.min(300, Math.round(w * 0.32)));
+    document.documentElement.style.setProperty("--labelw", lw + "px");
+    drawAxis();
+  }
+  layout();
+  addEventListener("resize", layout);
+})();
+</script>
+</body>
+</html>

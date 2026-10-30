@@ -1,0 +1,13 @@
+{
+  "database_id": "408814aa61a680ad90f6dc160166a30e",
+  "title": "프로젝트 타임라인",
+  "range_start": "2024-01",
+  "range_end": "now",
+  "title_property": "프로젝트명",
+  "start_property": "프로젝트 시작일",
+  "end_property": "프로젝트 마감일",
+  "fallback_range_property": "작업기간",
+  "category_property": "작업영역",
+  "hide_items_outside_range": true,
+  "sort": "start_desc"
+}
