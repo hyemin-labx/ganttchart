@@ -1,0 +1,50 @@
+name: 노션 간트 차트 갱신
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # 3시간마다 자동 갱신
+  workflow_dispatch:          # Actions 탭에서 수동 실행 버튼
+  push:
+    branches: [main]          # 파일을 고치면 바로 반영
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write              # 배포 후 임시 파일 삭제용
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 노션에서 일정 읽어 HTML 생성
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          CHART_PATH: ${{ secrets.CHART_PATH }}
+        run: python build.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+          retention-days: 1
+      - id: deploy
+        uses: actions/deploy-pages@v4
+      - name: 배포용 임시 파일 삭제 (비밀 경로 노출 방지)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for id in $(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[].id'); do
+            gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id
+          done
